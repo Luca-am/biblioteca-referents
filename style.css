@@ -80,6 +80,7 @@ body {
     gap: 2px;
     padding: 20px;
     transform-style: preserve-3d;
+    overflow: visible; /* allow picked CDs to grow outside */
 }
 
 .cd {
@@ -117,6 +118,21 @@ body {
         translateZ(50px) 
         rotateY(-35deg) 
         scale(1.12);
+}
+
+/* When a CD is "picked" we make it fixed-ish so it feels like it's being grabbed
+   and move it closer to the screen center for a more realistic pickup animation. */
+.cd.picked {
+    position: relative;
+    transform: translateX(120px) translateZ(120px) rotateY(-40deg) scale(1.18);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    z-index: 999;
+}
+
+/* A stronger style when it's both active and picked (cover visible) */
+.cd.active.picked {
+    width: calc(var(--cd-thickness) * 1.05);
+    transform: translateX(120px) translateZ(140px) rotateY(-45deg) scale(1.2);
 }
 
 .cd-spine {
