@@ -60,37 +60,79 @@ class BibliotecaReferents {
         };
         img.src = imgUrl;
 
-        // When clicking a CD, expand it and "pick it up" with a 3D animation.
+        // When clicking a CD, animate it to a 'picked' fixed position (like grabbing it from a shelf)
         cd.addEventListener('click', (e) => {
-            // If this CD is already picked, open the detail immediately
-            if (this.activeCD === cd && this.detailPanel.classList.contains('active')) return;
-
-            // Collapse previous active CD
+            // If another CD is active, drop it back first
             if (this.activeCD && this.activeCD !== cd) {
-                this.collapseCD(this.activeCD);
+                this.dropBack(this.activeCD);
             }
 
-            // If clicking same CD that's expanded but detail closed, open detail
+            // If this CD is already picked and detail open, do nothing
+            if (this.activeCD === cd && this.detailPanel.classList.contains('active')) return;
+
+            // If already active (expanded) but detail closed, open detail
             if (this.activeCD === cd && !this.detailPanel.classList.contains('active')) {
                 this.showDetail(referent);
                 return;
             }
 
-            // Expand and pick this CD
+            // Start pickup animation
             this.activeCD = cd;
-            cd.classList.add('active');
-            // Add picked class after a tiny delay so the CSS transition runs
-            requestAnimationFrame(() => cd.classList.add('picked'));
-
-            // After the pickup animation finishes, show the detail
-            const onTransitionEnd = (ev) => {
-                // only trigger after transform transition on the cd
-                if (ev.propertyName && ev.propertyName.includes('transform')) {
-                    cd.removeEventListener('transitionend', onTransitionEnd);
-                    this.showDetail(referent);
-                }
+            // remember original inline styles to restore later
+            const rect = cd.getBoundingClientRect();
+            cd._orig = {
+                position: cd.style.position || '',
+                left: cd.style.left || '',
+                top: cd.style.top || '',
+                width: cd.style.width || '',
+                height: cd.style.height || '',
+                zIndex: cd.style.zIndex || ''
             };
-            cd.addEventListener('transitionend', onTransitionEnd);
+
+            // set fixed position at same place to enable animating to center
+            cd.style.position = 'fixed';
+            cd.style.left = rect.left + 'px';
+            cd.style.top = rect.top + 'px';
+            cd.style.width = rect.width + 'px';
+            cd.style.height = rect.height + 'px';
+            cd.style.margin = '0';
+            cd.style.zIndex = 999;
+
+            // store original rect so we can animate back
+            cd._orig.rect = rect;
+
+            // force paint
+            void cd.offsetWidth;
+
+            // target size and position (center-left, slightly up)
+            const targetW = Math.min(420, window.innerWidth * 0.4);
+            const targetH = targetW; // square cover area
+            const targetLeft = Math.round(window.innerWidth * 0.6 - targetW / 2);
+            const targetTop = Math.round(window.innerHeight * 0.25);
+
+            // animate via transition of left/top/width/height and transform
+            const durStr = getComputedStyle(document.documentElement).getPropertyValue('--animation-duration') || '0.45s';
+            const dur = parseFloat(durStr.replace('s','')) * 1000 + 50;
+            cd.style.transition = `left ${dur}ms ease, top ${dur}ms ease, width ${dur}ms ease, height ${dur}ms ease, transform ${dur}ms ease`;
+
+            // show cover while animating
+            cd.classList.add('active');
+            // set cover visible for this element
+            const frontEl = cd.querySelector('.cd-front');
+            frontEl.style.display = 'block';
+
+            // start animation to center
+            requestAnimationFrame(() => {
+                cd.style.left = targetLeft + 'px';
+                cd.style.top = targetTop + 'px';
+                cd.style.width = targetW + 'px';
+                cd.style.height = targetH + 'px';
+                cd.style.transform = 'rotateY(-12deg)';
+                cd.classList.add('picked');
+            });
+
+            // after animation ends, open detail
+            setTimeout(() => this.showDetail(referent), dur + 30);
         });
 
         return cd;
@@ -114,8 +156,8 @@ class BibliotecaReferents {
         const closeButton = this.detailPanel.querySelector('.close-button');
         closeButton.addEventListener('click', () => {
             this.detailPanel.classList.remove('active');
-            // collapse active CD if any
-            if (this.activeCD) this.collapseCD(this.activeCD);
+            // animate active CD back into shelf if any
+            if (this.activeCD) this.dropBack(this.activeCD);
         });
     }
 
@@ -125,6 +167,60 @@ class BibliotecaReferents {
         // wait for picked->active transform animation then remove active
         setTimeout(() => cd.classList.remove('active'), 200);
         if (this.activeCD === cd) this.activeCD = null;
+    }
+
+    dropBack(cd) {
+        if (!cd) return;
+        const orig = cd._orig || {};
+        const origRect = orig.rect;
+        const durStr = getComputedStyle(document.documentElement).getPropertyValue('--animation-duration') || '0.45s';
+        const dur = parseFloat(durStr.replace('s','')) * 1000 + 50;
+
+        // if we have the original rect, animate back to it
+        if (origRect) {
+            // ensure front is visible for transition
+            const front = cd.querySelector('.cd-front');
+            front.style.display = 'block';
+
+            cd.style.transition = `left ${dur}ms ease, top ${dur}ms ease, width ${dur}ms ease, height ${dur}ms ease, transform ${dur}ms ease`;
+            // animate to original position/size
+            requestAnimationFrame(() => {
+                cd.style.left = origRect.left + 'px';
+                cd.style.top = origRect.top + 'px';
+                cd.style.width = origRect.width + 'px';
+                cd.style.height = origRect.height + 'px';
+                cd.style.transform = 'none';
+                cd.classList.remove('picked');
+            });
+
+            // after transition, restore original styles and remove active
+            setTimeout(() => {
+                // restore original inline styles
+                cd.style.position = orig.position || '';
+                cd.style.left = orig.left || '';
+                cd.style.top = orig.top || '';
+                cd.style.width = orig.width || '';
+                cd.style.height = orig.height || '';
+                cd.style.margin = '';
+                cd.style.zIndex = orig.zIndex || '';
+                cd.style.transition = '';
+                // hide front in-shelf
+                front.style.display = '';
+                cd.classList.remove('active');
+                if (this.activeCD === cd) this.activeCD = null;
+            }, dur + 30);
+        } else {
+            // fallback: just remove classes
+            cd.classList.remove('picked');
+            cd.classList.remove('active');
+            cd.style.position = '';
+            cd.style.left = '';
+            cd.style.top = '';
+            cd.style.width = '';
+            cd.style.height = '';
+            cd.style.zIndex = '';
+            if (this.activeCD === cd) this.activeCD = null;
+        }
     }
 
     // Simple luminance-based contrast helper: return '#fff' or '#000'

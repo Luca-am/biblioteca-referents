@@ -150,6 +150,18 @@ body {
 
 .cd-front { display: none; }
 
+/* Show the cover on the picked/focused CD (inline styles also set display) */
+.cd.picked .cd-front {
+    display: block !important;
+    background-size: cover;
+    background-position: center;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+}
+
 .cd-front::after {
     content: '';
     position: absolute;
