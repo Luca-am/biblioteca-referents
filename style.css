@@ -122,6 +122,14 @@ body {
     font-weight: 600;
 }
 
+/* hand-drawn / sketch like border for the spine */
+.cd-spine {
+    background: #ffffff;
+    border: 2px solid #000;
+    box-shadow: 4px 6px 12px rgba(0,0,0,0.08);
+    color: #111;
+}
+
 .cd-spine::before {
     content: '';
     position: absolute;
@@ -161,6 +169,22 @@ body {
     height: 100%;
     border-radius: 6px;
 }
+
+/* initials fallback when image missing */
+.cover-initials {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.95);
+    text-shadow: 0 2px 2px rgba(0,0,0,0.2);
+}
+
+/* when image missing, initials should contrast with the spine color */
+.cd-front .cover-initials { color: rgba(255,255,255,0.95); }
 
 .cd-front::after {
     content: '';

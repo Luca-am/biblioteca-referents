@@ -36,15 +36,19 @@ class BibliotecaReferents {
             <div class="cd-spine">${referent.nom}</div>
             <div class="cd-front" style="background-image: url('images/${referent.imatge}')"></div>
         `;
-        // assign a color from the palette (cycle)
-        const color = this.palette[idx % this.palette.length] || this.palette[this._colorIndex++ % this.palette.length];
-        const front = cd.querySelector('.cd-front');
-        // default to the color as background; if the image loads we'll replace it
-        front.style.backgroundColor = color;
+    // assign a color from the palette (cycle)
+    const color = this.palette[idx % this.palette.length] || this.palette[this._colorIndex++ % this.palette.length];
+    const front = cd.querySelector('.cd-front');
+    // default to the color as background; if the image loads we'll replace it
+    front.style.backgroundColor = color;
 
-        // ensure spine text is readable by picking white or black depending on color luminance
-        const spine = cd.querySelector('.cd-spine');
-        spine.style.color = this.getContrastColor(color);
+    // ensure spine text is readable by picking white or black depending on color luminance
+    const spine = cd.querySelector('.cd-spine');
+    spine.style.color = this.getContrastColor(color);
+
+    // give each spine a tiny random rotation to feel hand-placed
+    const jitter = (Math.random() * 6) - 3; // -3deg .. 3deg
+    cd.style.transform = `rotate(${jitter}deg)`;
 
         // Preload image; if it loads, set as background-image. If it fails, keep solid color.
         const imgUrl = `images/${referent.imatge}`;
@@ -53,10 +57,13 @@ class BibliotecaReferents {
             // use background-image for the front
             front.style.backgroundImage = `url('${imgUrl}')`;
             front.style.backgroundColor = 'transparent';
+            front.innerHTML = '';
         };
         img.onerror = () => {
-            // keep the solid color; optionally add a subtle pattern or initials
+            // keep the solid color and show initials
             front.style.backgroundImage = 'none';
+            const initials = this.getInitials(referent.nom);
+            front.innerHTML = `<div class="cover-initials">${initials}</div>`;
         };
         img.src = imgUrl;
 
@@ -98,17 +105,19 @@ class BibliotecaReferents {
             cd.style.margin = '0';
             cd.style.zIndex = 999;
 
-            // store original rect so we can animate back
+            // store original rect and transform so we can animate back
             cd._orig.rect = rect;
+            cd._orig.transform = cd.style.transform || '';
 
             // force paint
             void cd.offsetWidth;
 
             // target size and position (center-left, slightly up)
-            const targetW = Math.min(420, window.innerWidth * 0.4);
+            // target position: center-left "hand" area (about 35% from left)
+            const targetW = Math.min(420, window.innerWidth * 0.36);
             const targetH = targetW; // square cover area
-            const targetLeft = Math.round(window.innerWidth * 0.6 - targetW / 2);
-            const targetTop = Math.round(window.innerHeight * 0.25);
+            const targetLeft = Math.round(window.innerWidth * 0.35 - targetW / 2);
+            const targetTop = Math.round(window.innerHeight * 0.18);
 
             // animate via transition of left/top/width/height and transform
             const durStr = getComputedStyle(document.documentElement).getPropertyValue('--animation-duration') || '0.45s';
@@ -204,6 +213,8 @@ class BibliotecaReferents {
                 cd.style.margin = '';
                 cd.style.zIndex = orig.zIndex || '';
                 cd.style.transition = '';
+                // restore original transform (rotation)
+                cd.style.transform = orig.transform || '';
                 // hide front in-shelf
                 front.style.display = '';
                 cd.classList.remove('active');
@@ -221,6 +232,13 @@ class BibliotecaReferents {
             cd.style.zIndex = '';
             if (this.activeCD === cd) this.activeCD = null;
         }
+    }
+
+    getInitials(name) {
+        if (!name) return '';
+        const parts = name.trim().split(/\s+/);
+        if (parts.length === 1) return parts[0].substring(0,2).toUpperCase();
+        return (parts[0][0] + parts[1][0]).toUpperCase();
     }
 
     // Simple luminance-based contrast helper: return '#fff' or '#000'
