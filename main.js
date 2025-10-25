@@ -124,20 +124,14 @@ class BibliotecaReferents {
             const dur = parseFloat(durStr.replace('s','')) * 1000 + 50;
             cd.style.transition = `left ${dur}ms ease, top ${dur}ms ease, width ${dur}ms ease, height ${dur}ms ease, transform ${dur}ms ease`;
 
-            // show cover only when picked (avoid showing big overlay while still in shelf)
-            const frontEl = cd.querySelector('.cd-front');
-            frontEl.style.display = 'none';
-
-            // start animation to center; mark as picked during animation
+            // start animation to center; mark as moving during animation
             requestAnimationFrame(() => {
-                // make cover visible slightly after animation starts to avoid overlaying the shelf layout
-                frontEl.style.display = 'block';
                 cd.style.left = targetLeft + 'px';
                 cd.style.top = targetTop + 'px';
                 cd.style.width = targetW + 'px';
                 cd.style.height = targetH + 'px';
                 cd.style.transform = 'rotateY(-12deg)';
-                cd.classList.add('picked');
+                cd.classList.add('moving');
             });
 
             // after animation ends, open detail
@@ -172,7 +166,7 @@ class BibliotecaReferents {
 
     collapseCD(cd) {
         if (!cd) return;
-        cd.classList.remove('picked');
+        cd.classList.remove('moving');
         // wait for picked->active transform animation then remove active
         setTimeout(() => cd.classList.remove('active'), 200);
         if (this.activeCD === cd) this.activeCD = null;
@@ -187,10 +181,6 @@ class BibliotecaReferents {
 
         // if we have the original rect, animate back to it
         if (origRect) {
-            // ensure front is visible for transition
-            const front = cd.querySelector('.cd-front');
-            front.style.display = 'block';
-
             cd.style.transition = `left ${dur}ms ease, top ${dur}ms ease, width ${dur}ms ease, height ${dur}ms ease, transform ${dur}ms ease`;
             // animate to original position/size
             requestAnimationFrame(() => {
@@ -198,8 +188,8 @@ class BibliotecaReferents {
                 cd.style.top = origRect.top + 'px';
                 cd.style.width = origRect.width + 'px';
                 cd.style.height = origRect.height + 'px';
-                cd.style.transform = 'none';
-                cd.classList.remove('picked');
+                cd.style.transform = orig.transform || '';
+                cd.classList.remove('moving');
             });
 
             // after transition, restore original styles and remove active
@@ -215,14 +205,13 @@ class BibliotecaReferents {
                 cd.style.transition = '';
                 // restore original transform (rotation)
                 cd.style.transform = orig.transform || '';
-                // hide front in-shelf
-                front.style.display = '';
                 cd.classList.remove('active');
                 if (this.activeCD === cd) this.activeCD = null;
             }, dur + 30);
         } else {
             // fallback: just remove classes
             cd.classList.remove('picked');
+            cd.classList.remove('moving');
             cd.classList.remove('active');
             cd.style.position = '';
             cd.style.left = '';
