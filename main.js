@@ -6,6 +6,12 @@ class BibliotecaReferents {
         this.cdDescription = document.getElementById('cd-description');
         this.cdCoverImage = document.getElementById('cd-cover-image');
         this.activeCD = null; // track the currently expanded CD
+        // Palette of bright colors to use as fallbacks when images fail
+        this.palette = [
+            '#ff6b6b', '#f7b267', '#ffd166', '#06d6a0', '#4ecdc4',
+            '#4d96ff', '#845ef7', '#ff6fb5', '#8d99ae', '#f94144'
+        ];
+        this._colorIndex = 0;
         this.setupCloseButton();
         this.init();
     }
@@ -17,19 +23,42 @@ class BibliotecaReferents {
     }
 
     renderCDs() {
-        referents.forEach(referent => {
-            const cd = this.createCD(referent);
+        referents.forEach((referent, idx) => {
+            const cd = this.createCD(referent, idx);
             this.container.appendChild(cd);
         });
     }
 
-    createCD(referent) {
+    createCD(referent, idx) {
         const cd = document.createElement('div');
         cd.className = 'cd';
         cd.innerHTML = `
             <div class="cd-spine">${referent.nom}</div>
             <div class="cd-front" style="background-image: url('images/${referent.imatge}')"></div>
         `;
+        // assign a color from the palette (cycle)
+        const color = this.palette[idx % this.palette.length] || this.palette[this._colorIndex++ % this.palette.length];
+        const front = cd.querySelector('.cd-front');
+        // default to the color as background; if the image loads we'll replace it
+        front.style.backgroundColor = color;
+
+        // ensure spine text is readable by picking white or black depending on color luminance
+        const spine = cd.querySelector('.cd-spine');
+        spine.style.color = this.getContrastColor(color);
+
+        // Preload image; if it loads, set as background-image. If it fails, keep solid color.
+        const imgUrl = `images/${referent.imatge}`;
+        const img = new Image();
+        img.onload = () => {
+            // use background-image for the front
+            front.style.backgroundImage = `url('${imgUrl}')`;
+            front.style.backgroundColor = 'transparent';
+        };
+        img.onerror = () => {
+            // keep the solid color; optionally add a subtle pattern or initials
+            front.style.backgroundImage = 'none';
+        };
+        img.src = imgUrl;
 
         // When clicking a CD, expand it and "pick it up" with a 3D animation.
         cd.addEventListener('click', (e) => {
@@ -96,6 +125,18 @@ class BibliotecaReferents {
         // wait for picked->active transform animation then remove active
         setTimeout(() => cd.classList.remove('active'), 200);
         if (this.activeCD === cd) this.activeCD = null;
+    }
+
+    // Simple luminance-based contrast helper: return '#fff' or '#000'
+    getContrastColor(hex) {
+        // remove # if present
+        const h = hex.replace('#','');
+        const r = parseInt(h.substring(0,2),16);
+        const g = parseInt(h.substring(2,4),16);
+        const b = parseInt(h.substring(4,6),16);
+        // Perceived luminance
+        const lum = 0.2126*r + 0.7152*g + 0.0722*b;
+        return lum > 140 ? '#000' : '#fff';
     }
 
     adjustShelfSize() {
