@@ -5,6 +5,10 @@
     --shelf-color: #4a4a4a;
     --shelf-border: #333333;
     --cd-spine-color: #222;
+    --animation-duration: 0.8s;
+    --animation-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --cd-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
+    --shelf-depth: 30px;
 }
 
 * {
@@ -36,11 +40,27 @@ body {
 .shelf {
     position: relative;
     transform-style: preserve-3d;
-    transform: rotateX(0deg);
+    transform: rotateX(8deg) rotateY(0deg);
     background: var(--shelf-color);
-    padding: 20px;
+    padding: 30px 20px;
     border-radius: 4px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.1);
+    background-image: 
+        linear-gradient(45deg, 
+            rgba(255,255,255,0.05) 25%, 
+            transparent 25%, 
+            transparent 75%, 
+            rgba(255,255,255,0.05) 75%, 
+            rgba(255,255,255,0.05)),
+        linear-gradient(45deg, 
+            rgba(255,255,255,0.05) 25%, 
+            transparent 25%, 
+            transparent 75%, 
+            rgba(255,255,255,0.05) 75%, 
+            rgba(255,255,255,0.05));
+    background-size: 60px 60px;
+    background-position: 0 0, 30px 30px;
 }
 
 .shelf-background {
@@ -68,20 +88,35 @@ body {
     position: relative;
     transform-style: preserve-3d;
     transform-origin: center left;
-    transition: all 0.5s ease;
+    transition: all var(--animation-duration) var(--animation-timing);
     cursor: pointer;
     margin-right: 3px;
+    will-change: transform, width;
 }
 
 .cd:hover {
-    transform: translateX(5px);
+    transform: translateX(5px) translateZ(10px) rotateY(-15deg);
     z-index: 1;
+    box-shadow: var(--cd-shadow);
 }
 
 .cd.active {
     width: var(--cd-thickness);
-    transform: translateX(20px);
+    transform: 
+        translateX(80px) 
+        translateZ(50px) 
+        rotateY(-32deg) 
+        scale(1.1);
     z-index: 2;
+    transition: all var(--animation-duration) var(--animation-timing);
+}
+
+.cd.active:hover {
+    transform: 
+        translateX(80px) 
+        translateZ(50px) 
+        rotateY(-35deg) 
+        scale(1.12);
 }
 
 .cd-spine {
@@ -103,10 +138,46 @@ body {
     box-shadow: 
         -1px 0 2px rgba(0,0,0,0.5),
         1px 0 2px rgba(255,255,255,0.1);
-    background-image: linear-gradient(90deg, 
-        rgba(255,255,255,0.1) 0%,
-        rgba(255,255,255,0.2) 50%,
-        rgba(255,255,255,0.1) 100%);
+    background-image: 
+        linear-gradient(90deg, 
+            rgba(255,255,255,0.1) 0%,
+            rgba(255,255,255,0.2) 50%,
+            rgba(255,255,255,0.1) 100%),
+        linear-gradient(180deg,
+            rgba(255,255,255,0.1) 0%,
+            transparent 15%,
+            transparent 85%,
+            rgba(255,255,255,0.1) 100%);
+    text-shadow: 0 0 3px rgba(0,0,0,0.5);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.cd-spine::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255,255,255,0.2),
+        transparent);
+}
+
+.cd-spine::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255,255,255,0.2),
+        transparent);
 }
 
 .cd-front {
@@ -124,17 +195,43 @@ body {
 }
 
 .cd.active .cd-front {
+    display: none;
+    position: absolute;
+    width: var(--cd-thickness);
+    height: var(--cd-height);
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: all var(--animation-duration) var(--animation-timing);
+    border-radius: 4px;
+    box-shadow: 
+        -2px 2px 15px rgba(0,0,0,0.3),
+        0 0 20px rgba(0,0,0,0.2);
+    background-color: #f0f0f0;
+    border: 1px solid rgba(255,255,255,0.2);
+    overflow: hidden;
+}
+
+.cd-front::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(255,255,255,0.2) 0%,
+        transparent 50%,
+        rgba(0,0,0,0.2) 100%
+    );
+    pointer-events: none;
+}
+
+.cd.active .cd-front {
     display: block;
     opacity: 1;
-}
-
-.cd-back {
-    display: none;
-}
-
-.cd-detail {
-    position: fixed;
-    top: 0;
+    transform: translateZ(1px);
     left: 0;
     width: 100%;
     height: 100%;
