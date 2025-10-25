@@ -124,14 +124,14 @@ class BibliotecaReferents {
             const dur = parseFloat(durStr.replace('s','')) * 1000 + 50;
             cd.style.transition = `left ${dur}ms ease, top ${dur}ms ease, width ${dur}ms ease, height ${dur}ms ease, transform ${dur}ms ease`;
 
-            // show cover while animating
-            cd.classList.add('active');
-            // set cover visible for this element
+            // show cover only when picked (avoid showing big overlay while still in shelf)
             const frontEl = cd.querySelector('.cd-front');
-            frontEl.style.display = 'block';
+            frontEl.style.display = 'none';
 
-            // start animation to center
+            // start animation to center; mark as picked during animation
             requestAnimationFrame(() => {
+                // make cover visible slightly after animation starts to avoid overlaying the shelf layout
+                frontEl.style.display = 'block';
                 cd.style.left = targetLeft + 'px';
                 cd.style.top = targetTop + 'px';
                 cd.style.width = targetW + 'px';
