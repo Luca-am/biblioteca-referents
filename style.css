@@ -1,5 +1,5 @@
 :root {
-    --cd-width: 12px;
+    --cd-width: 18px;
     --cd-height: 140px;
     --cd-thickness: 140px;
     --shelf-color: #4a4a4a;
@@ -204,27 +204,13 @@ body {
     background-size: cover;
     background-position: center;
     opacity: 0;
-    transition: opacity 0.3s ease;
-    border-radius: 2px;
-    box-shadow: -2px 2px 5px rgba(0,0,0,0.2);
-    background-color: #f0f0f0; /* Color de fons per si la imatge no carrega */
-}
-
-.cd.active .cd-front {
-    display: none;
-    position: absolute;
-    width: var(--cd-thickness);
-    height: var(--cd-height);
-    background-size: cover;
-    background-position: center;
-    opacity: 0;
     transition: all var(--animation-duration) var(--animation-timing);
     border-radius: 4px;
     box-shadow: 
         -2px 2px 15px rgba(0,0,0,0.3),
         0 0 20px rgba(0,0,0,0.2);
-    background-color: #f0f0f0;
-    border: 1px solid rgba(255,255,255,0.2);
+    background-color: #f0f0f0; /* Color de fons per si la imatge no carrega */
+    border: 1px solid rgba(255,255,255,0.08);
     overflow: hidden;
 }
 
@@ -244,17 +230,15 @@ body {
     pointer-events: none;
 }
 
+/* Show the cover when the CD is active; ensure it's visible and fills the expanded CD */
 .cd.active .cd-front {
     display: block;
     opacity: 1;
     transform: translateZ(1px);
     left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.9);
-    display: none;
-    justify-content: center;
-    align-items: center;
+    top: 0;
+    width: var(--cd-thickness);
+    height: var(--cd-height);
     z-index: 1000;
 }
 
