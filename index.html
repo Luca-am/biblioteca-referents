@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca de Referents</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="scene">
+        <div class="shelf">
+            <div class="shelf-background"></div>
+            <div id="cd-container" class="cd-container">
+                <!-- Els CDs es generaran amb JavaScript -->
+            </div>
+        </div>
+    </div>
+    <div id="cd-detail" class="cd-detail">
+        <button class="close-button">&times;</button>
+        <div class="cd-content">
+            <div class="cd-cover">
+                <img src="" alt="" id="cd-cover-image">
+            </div>
+            <div class="cd-info">
+                <h2 id="cd-title"></h2>
+                <p id="cd-description"></p>
+            </div>
+        </div>
+    </div>
+    <script src="referents.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

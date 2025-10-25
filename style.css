@@ -1,0 +1,224 @@
+:root {
+    --cd-width: 12px;
+    --cd-height: 140px;
+    --cd-thickness: 140px;
+    --shelf-color: #4a4a4a;
+    --shelf-border: #333333;
+    --cd-spine-color: #222;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #1a1a1a;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    perspective: 1000px;
+    overflow-x: hidden;
+}
+
+.scene {
+    width: 90vw;
+    height: 80vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.shelf {
+    position: relative;
+    transform-style: preserve-3d;
+    transform: rotateX(0deg);
+    background: var(--shelf-color);
+    padding: 20px;
+    border-radius: 4px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.shelf-background {
+    position: absolute;
+    width: calc(100% + 40px);
+    height: calc(100% + 20px);
+    background: var(--shelf-color);
+    transform: translateZ(-15px);
+    box-shadow: 
+        0 2px 10px rgba(0,0,0,0.8),
+        inset 0 0 50px rgba(0,0,0,0.5);
+    border: 2px solid var(--shelf-border);
+}
+
+.cd-container {
+    display: flex;
+    gap: 2px;
+    padding: 20px;
+    transform-style: preserve-3d;
+}
+
+.cd {
+    width: var(--cd-width);
+    height: var(--cd-height);
+    position: relative;
+    transform-style: preserve-3d;
+    transform-origin: center left;
+    transition: all 0.5s ease;
+    cursor: pointer;
+    margin-right: 3px;
+}
+
+.cd:hover {
+    transform: translateX(5px);
+    z-index: 1;
+}
+
+.cd.active {
+    width: var(--cd-thickness);
+    transform: translateX(20px);
+    z-index: 2;
+}
+
+.cd-spine {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: var(--cd-spine-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: white;
+    text-orientation: mixed;
+    writing-mode: vertical-rl;
+    padding: 5px;
+    text-align: center;
+    overflow: hidden;
+    border-radius: 1px;
+    box-shadow: 
+        -1px 0 2px rgba(0,0,0,0.5),
+        1px 0 2px rgba(255,255,255,0.1);
+    background-image: linear-gradient(90deg, 
+        rgba(255,255,255,0.1) 0%,
+        rgba(255,255,255,0.2) 50%,
+        rgba(255,255,255,0.1) 100%);
+}
+
+.cd-front {
+    display: none;
+    position: absolute;
+    width: var(--cd-thickness);
+    height: var(--cd-height);
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 2px;
+    box-shadow: -2px 2px 5px rgba(0,0,0,0.2);
+    background-color: #f0f0f0; /* Color de fons per si la imatge no carrega */
+}
+
+.cd.active .cd-front {
+    display: block;
+    opacity: 1;
+}
+
+.cd-back {
+    display: none;
+}
+
+.cd-detail {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.cd-detail.active {
+    display: flex;
+}
+
+.cd-content {
+    background: #222;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 800px;
+    width: 90%;
+    display: flex;
+    gap: 20px;
+    position: relative;
+}
+
+.cd-cover {
+    flex: 0 0 300px;
+}
+
+.cd-cover img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    background-color: #f0f0f0; /* Color de fons per si la imatge no carrega */
+}
+
+.cd-info {
+    flex: 1;
+    color: white;
+}
+
+.cd-info h2 {
+    margin-bottom: 15px;
+    color: #fff;
+    font-size: 24px;
+}
+
+.cd-info p {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.cd-info em {
+    color: #ffd700;
+    font-size: 18px;
+    display: block;
+    margin-bottom: 15px;
+}
+
+.cd-info a {
+    color: #4a9eff;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.cd-info a:hover {
+    color: #7cb8ff;
+    text-decoration: underline;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.close-button:hover {
+    color: #999;
+}
