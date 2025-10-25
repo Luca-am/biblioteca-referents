@@ -129,14 +129,20 @@ class BibliotecaReferents {
 
             // start animation to center; mark as moving during animation
             requestAnimationFrame(() => {
+                // reveal the front face immediately (visibility handled in CSS)
+                cd.classList.add('moving');
+
+                // slightly delay the flip so the front becomes visible then rotates (gives a more natural effect)
+                setTimeout(() => {
+                    if (cdInner) cdInner.classList.add('flipped');
+                }, 45);
+
+                // animate position/size
                 cd.style.left = targetLeft + 'px';
                 cd.style.top = targetTop + 'px';
                 cd.style.width = targetW + 'px';
                 cd.style.height = targetH + 'px';
                 cd.style.transform = 'none';
-                cd.classList.add('moving');
-                // flip the inner faces so the cover shows during/after move
-                if (cdInner) cdInner.classList.add('flipped');
             });
 
             // after animation ends, open detail

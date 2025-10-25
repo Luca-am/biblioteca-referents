@@ -231,6 +231,14 @@ body {
     opacity: 1;
 }
 
+/* small translateZ 'pop' while picking to emphasize depth */
+.cd.moving .cd-inner {
+    transform: translateZ(12px);
+}
+.cd.moving .cd-inner.flipped {
+    transform: translateZ(36px) rotateY(180deg);
+}
+
 .cd-detail.active {
     display: flex;
 }
