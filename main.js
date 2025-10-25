@@ -33,8 +33,10 @@ class BibliotecaReferents {
         const cd = document.createElement('div');
         cd.className = 'cd';
         cd.innerHTML = `
-            <div class="cd-spine">${referent.nom}</div>
-            <div class="cd-front" style="background-image: url('images/${referent.imatge}')"></div>
+            <div class="cd-inner">
+                <div class="cd-spine">${referent.nom}</div>
+                <div class="cd-front" style="background-image: url('images/${referent.imatge}')"></div>
+            </div>
         `;
     // assign a color from the palette (cycle)
     const color = this.palette[idx % this.palette.length] || this.palette[this._colorIndex++ % this.palette.length];
@@ -85,6 +87,7 @@ class BibliotecaReferents {
 
             // Start pickup animation
             this.activeCD = cd;
+            const cdInner = cd.querySelector('.cd-inner');
             // remember original inline styles to restore later
             const rect = cd.getBoundingClientRect();
             cd._orig = {
@@ -130,8 +133,10 @@ class BibliotecaReferents {
                 cd.style.top = targetTop + 'px';
                 cd.style.width = targetW + 'px';
                 cd.style.height = targetH + 'px';
-                cd.style.transform = 'rotateY(-12deg)';
+                cd.style.transform = 'none';
                 cd.classList.add('moving');
+                // flip the inner faces so the cover shows during/after move
+                if (cdInner) cdInner.classList.add('flipped');
             });
 
             // after animation ends, open detail
@@ -190,6 +195,8 @@ class BibliotecaReferents {
                 cd.style.height = origRect.height + 'px';
                 cd.style.transform = orig.transform || '';
                 cd.classList.remove('moving');
+                const cdInner = cd.querySelector('.cd-inner');
+                if (cdInner) cdInner.classList.remove('flipped');
             });
 
             // after transition, restore original styles and remove active

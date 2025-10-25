@@ -79,6 +79,17 @@ body {
     cursor: pointer;
     will-change: transform;
     flex: 0 0 auto;
+    perspective: 900px; /* give children a 3D perspective */
+}
+
+.cd-inner {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform calc(var(--animation-duration) * 1.1) var(--animation-timing);
 }
 
 .cd:hover {
@@ -120,6 +131,8 @@ body {
     overflow: hidden;
     border-radius: 3px;
     font-weight: 600;
+    backface-visibility: hidden;
+    transform: rotateY(0deg) translateZ(1px);
 }
 
 /* hand-drawn / sketch like border for the spine */
@@ -156,7 +169,18 @@ body {
         transparent);
 }
 
-.cd-front { display: none; }
+.cd-front { 
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-size: cover;
+    background-position: center;
+    backface-visibility: hidden;
+    transform: rotateY(180deg) translateZ(1px);
+    /* hide by default inside the shelf to avoid the large white box */
+    visibility: hidden;
+    opacity: 0;
+}
 
 /* Show the cover on the picked/focused CD (inline styles also set display) */
 
@@ -195,6 +219,17 @@ body {
 
 /* Show the cover when the CD is active; ensure it's visible and fills the expanded CD */
 .cd.active .cd-front { display: none; }
+
+/* flipping the inner container shows the front face */
+.cd-inner.flipped {
+    transform: rotateY(180deg);
+}
+
+/* show the front face when the CD is in the moving/picked state */
+.cd.moving .cd-front {
+    visibility: visible;
+    opacity: 1;
+}
 
 .cd-detail.active {
     display: flex;
