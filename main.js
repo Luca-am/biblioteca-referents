@@ -141,9 +141,10 @@ class BibliotecaReferents {
 
     adjustShelfSize() {
         const totalCDs = referents.length;
-        const cdWidth = 140; // Ample del CD més el gap
-        const shelfWidth = totalCDs * cdWidth;
-        this.container.style.width = shelfWidth + 'px';
+        // spine width + gap: match CSS (.cd width + gap from .cd-container)
+        const cdWidth = 28 + 8; // 28px spine + 8px gap
+        const shelfWidth = Math.max(this.container.clientWidth, totalCDs * cdWidth);
+        this.container.style.minWidth = shelfWidth + 'px';
     }
 }
 
