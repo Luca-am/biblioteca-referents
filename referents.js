@@ -4,11 +4,11 @@ const referents = [
         "imatge": "gloriafuertes.jpg"
     },
     {
-        "nom": "Hannah Arendt",
+        "nom": "Hannahhh Arendt",
         "imatge": "hannaharendt.jpg"
     },
     {
-        "nom": "Audre Lorde",
+        "nom": "Audreee Lorde",
         "imatge": "audrelorde.jpg"
     },
     {
