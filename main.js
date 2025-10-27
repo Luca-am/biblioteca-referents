@@ -118,15 +118,16 @@ class BibliotecaReferents {
             // target size and position (center-left, slightly up)
             // target position: center-left "hand" area (about 35% from left)
             const shelfRect = this.container.parentElement.getBoundingClientRect();
-            const shelfBasedWidth = Math.max(shelfRect.width * 0.55, 180);
+            const shelfBasedWidth = Math.max(shelfRect.width * 0.5, 180);
             const availableInViewport = Math.max(window.innerWidth - 140, 180);
-            const targetW = Math.min(420, shelfBasedWidth, availableInViewport);
+            const targetW = Math.min(400, shelfBasedWidth, availableInViewport);
             const targetH = targetW; // square cover area
-            const targetCenter = shelfRect.left + shelfRect.width * 0.35;
+            const desiredLeft = shelfRect.left + Math.min(shelfRect.width * 0.08, 80);
             const maxLeft = window.innerWidth - targetW - 40;
             const minLeft = 40;
-            const targetLeft = Math.min(Math.max(targetCenter - targetW / 2, minLeft), maxLeft);
-            const targetTop = Math.max(shelfRect.top - targetH * 0.65, 40);
+            const targetLeft = Math.min(Math.max(desiredLeft, minLeft), maxLeft);
+            const desiredTop = shelfRect.top + shelfRect.height * 0.1;
+            const targetTop = Math.min(Math.max(desiredTop, 30), window.innerHeight - targetH - 40);
 
             // animate via transition of left/top/width/height and transform
             const durStr = getComputedStyle(document.documentElement).getPropertyValue('--animation-duration') || '0.45s';
