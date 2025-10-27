@@ -99,6 +99,19 @@ class BibliotecaReferents {
                 zIndex: cd.style.zIndex || ''
             };
 
+            // Insert a placeholder to keep shelf layout stable while this CD is removed from flow
+            if (!cd._placeholder) {
+                const ph = document.createElement('div');
+                ph.className = 'cd-placeholder';
+                cd._placeholder = ph;
+                cd.parentNode.insertBefore(ph, cd);
+            }
+            if (cd._placeholder) {
+                cd._placeholder.style.width = rect.width + 'px';
+                cd._placeholder.style.height = rect.height + 'px';
+                cd._placeholder.style.flex = '0 0 ' + rect.width + 'px';
+            }
+
             // set fixed position at same place to enable animating to center
             cd.style.position = 'fixed';
             cd.style.left = rect.left + 'px';
@@ -144,7 +157,10 @@ class BibliotecaReferents {
                 cd.classList.add('show-front');
 
                 // apply a small left hinge immediately so it reads as being pulled out
-                if (cdInner) cdInner.classList.add('opened');
+                if (cdInner) {
+                    cdInner.classList.remove('facing');
+                    cdInner.classList.add('opened');
+                }
 
                 // animate position/size
                 cd.style.left = targetLeft + 'px';
@@ -242,6 +258,10 @@ class BibliotecaReferents {
                 cd.style.transform = orig.transform || '';
                 cd.classList.remove('active');
                 cd.classList.remove('show-front');
+                if (cd._placeholder && cd._placeholder.parentNode) {
+                    cd._placeholder.parentNode.removeChild(cd._placeholder);
+                    cd._placeholder = null;
+                }
                 if (this.activeCD === cd) this.activeCD = null;
             }, dur + 30);
             } else {
@@ -254,6 +274,11 @@ class BibliotecaReferents {
                 if (cdInner) {
                     cdInner.classList.remove('opened');
                     cdInner.classList.remove('facing');
+                }
+                // remove any placeholder if present
+                if (cd._placeholder && cd._placeholder.parentNode) {
+                    cd._placeholder.parentNode.removeChild(cd._placeholder);
+                    cd._placeholder = null;
                 }
             cd.style.position = '';
             cd.style.left = '';

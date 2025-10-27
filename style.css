@@ -90,6 +90,14 @@ body {
     overflow: visible;
 }
 
+.cd-placeholder {
+    width: var(--spine-width);
+    height: 160px;
+    flex: 0 0 var(--spine-width);
+    visibility: hidden;
+    pointer-events: none;
+}
+
 .cd-inner {
     position: absolute;
     left: 0;
