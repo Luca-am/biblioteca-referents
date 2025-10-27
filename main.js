@@ -117,10 +117,16 @@ class BibliotecaReferents {
 
             // target size and position (center-left, slightly up)
             // target position: center-left "hand" area (about 35% from left)
-            const targetW = Math.min(420, window.innerWidth * 0.36);
+            const shelfRect = this.container.parentElement.getBoundingClientRect();
+            const shelfBasedWidth = Math.max(shelfRect.width * 0.55, 180);
+            const availableInViewport = Math.max(window.innerWidth - 140, 180);
+            const targetW = Math.min(420, shelfBasedWidth, availableInViewport);
             const targetH = targetW; // square cover area
-            const targetLeft = Math.round(window.innerWidth * 0.35 - targetW / 2);
-            const targetTop = Math.round(window.innerHeight * 0.18);
+            const targetCenter = shelfRect.left + shelfRect.width * 0.35;
+            const maxLeft = window.innerWidth - targetW - 40;
+            const minLeft = 40;
+            const targetLeft = Math.min(Math.max(targetCenter - targetW / 2, minLeft), maxLeft);
+            const targetTop = Math.max(shelfRect.top - targetH * 0.65, 40);
 
             // animate via transition of left/top/width/height and transform
             const durStr = getComputedStyle(document.documentElement).getPropertyValue('--animation-duration') || '0.45s';
@@ -131,6 +137,7 @@ class BibliotecaReferents {
             requestAnimationFrame(() => {
                 // reveal the front face immediately (visibility handled in CSS)
                 cd.classList.add('moving');
+                cd.classList.add('show-front');
 
                 // slightly delay the flip so the front becomes visible then rotates (gives a more natural effect)
                 setTimeout(() => {
@@ -219,6 +226,7 @@ class BibliotecaReferents {
                 // restore original transform (rotation)
                 cd.style.transform = orig.transform || '';
                 cd.classList.remove('active');
+                cd.classList.remove('show-front');
                 if (this.activeCD === cd) this.activeCD = null;
             }, dur + 30);
         } else {
@@ -226,6 +234,7 @@ class BibliotecaReferents {
             cd.classList.remove('picked');
             cd.classList.remove('moving');
             cd.classList.remove('active');
+            cd.classList.remove('show-front');
             cd.style.position = '';
             cd.style.left = '';
             cd.style.top = '';
@@ -257,10 +266,12 @@ class BibliotecaReferents {
 
     adjustShelfSize() {
         const totalCDs = referents.length;
-        // spine width + gap: match CSS (.cd width + gap from .cd-container)
-        const cdWidth = 28 + 8; // 28px spine + 8px gap
-        const shelfWidth = Math.max(this.container.clientWidth, totalCDs * cdWidth);
-        this.container.style.minWidth = shelfWidth + 'px';
+        // approximate spine width + gap to decide spacing strategy
+        const cdWidth = 28 + 12; // spine plus average gap
+        const containerWidth = this.container.parentElement.clientWidth || window.innerWidth;
+        const requiredWidth = totalCDs * cdWidth;
+        this.container.style.minWidth = '100%';
+        this.container.style.justifyContent = requiredWidth < containerWidth ? 'space-evenly' : 'flex-start';
     }
 }
 
