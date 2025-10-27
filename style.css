@@ -9,6 +9,7 @@
     --animation-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
     --cd-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
     --shelf-depth: 30px;
+    --spine-width: 28px;
 }
 
 * {
@@ -76,7 +77,7 @@ body {
 }
 
 .cd {
-    width: 28px; /* visible spine width */
+    width: var(--spine-width); /* visible spine width */
     height: 160px;
     position: relative;
     transform-style: preserve-3d;
@@ -86,6 +87,7 @@ body {
     will-change: transform;
     flex: 0 0 auto;
     perspective: 900px; /* give children a 3D perspective */
+    overflow: visible;
 }
 
 .cd-inner {
@@ -100,27 +102,29 @@ body {
 }
 
 .cd:hover {
-    transform: translateY(-8px) rotateY(-6deg) scale(1.02);
+    transform: translateY(-8px) scale(1.02);
     z-index: 5;
     box-shadow: 0 10px 20px rgba(0,0,0,0.12);
 }
 
 .cd.active {
-    transform: translateY(-18px) rotateY(-10deg) scale(1.06);
+    transform: translateY(-14px) scale(1.04);
     z-index: 20;
 }
 
 /* When a CD is "picked" we make it fixed-ish so it feels like it's being grabbed
    and move it closer to the screen center for a more realistic pickup animation. */
 .cd.moving {
-    transform: translateY(-28px) rotateY(-12deg) scale(1.08);
+    /* keep only a subtle lift+scale here — the rotation is handled by the inner face
+       so we avoid double-rotations that made the cover shift unexpectedly */
+    transform: translateY(-20px) scale(1.06);
     box-shadow: 0 20px 60px rgba(0,0,0,0.18);
     z-index: 999;
 }
 
 /* active + moving remains modest */
 .cd.active.moving {
-    transform: translateY(-30px) rotateY(-14deg) scale(1.12);
+    transform: translateY(-22px) scale(1.08);
 }
 
 .cd-spine {
@@ -179,16 +183,23 @@ body {
 
 .cd-front { 
     position: absolute;
-    left: 0; top: 0;
-    width: 100%; height: 100%;
+    top: 0;
+    left: var(--spine-width);
+    width: calc(100% - var(--spine-width));
+    height: 100%;
     background-size: cover;
     background-position: center;
     backface-visibility: hidden;
-    transform: rotateY(180deg) translateZ(1px);
-    /* hide by default inside the shelf to avoid the large white box */
+    transform-origin: left center;
+    transform: rotateY(0deg);
     visibility: hidden;
     opacity: 0;
-    transition: opacity 0.35s ease;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    border-radius: 6px;
+    border: 3px solid #000;
+    background-color: #ffffff;
+    box-shadow: 12px 16px 28px rgba(0,0,0,0.18);
+    pointer-events: none;
 }
 
 /* Show the cover on the picked/focused CD (inline styles also set display) */
@@ -226,35 +237,53 @@ body {
     pointer-events: none;
 }
 
-/* Show the cover when the CD is active; ensure it's visible and fills the expanded CD */
-.cd.active .cd-front { display: none; }
+/* single outward turn for the inner case */
+/* single outward turn for the inner case (hinge on the left, small angle)
+   Use a single transform only so we don't override earlier rules or create
+   conflicting declarations. Keep a slight translateZ to make the cover read
+   as a distinct plane while still attached to the spine. */
+.cd-inner.opened {
+    transform-origin: left center;
+    transform: translateZ(18px) rotateY(-12deg);
+}
 
-/* flipping the inner container shows the front face */
-.cd-inner.flipped {
-    transform: rotateY(-180deg);
+/* final facing state: front faces the viewer straight-on
+   translateZ is slightly larger to bring it forward a bit more when facing */
+.cd-inner.facing {
+    transform-origin: left center;
+    transform: translateZ(28px) rotateY(0deg);
 }
 
 /* show the front face when the CD is in the moving/picked state */
+/* reveal the front without applying an extra rotation here.
+   The rotation is applied to the inner container (.cd-inner.opened)
+   so the cover behaves as part of the same object and doesn't
+   visually detach or shift unexpectedly. */
 .cd.moving .cd-front {
     visibility: visible;
     opacity: 1;
+    transform: none;
 }
 
 .cd.show-front .cd-front {
     visibility: visible;
     opacity: 1;
+    transform: rotateY(0deg) translateX(0);
 }
 
 .cd.show-front .cd-spine {
-    opacity: 0;
+    opacity: 1;
 }
 
 /* small translateZ 'pop' while picking to emphasize depth */
 .cd.moving .cd-inner {
-    transform: translateZ(12px);
+    transform: translateZ(10px);
 }
-.cd.moving .cd-inner.flipped {
-    transform: translateZ(36px) rotateY(-180deg);
+.cd.moving .cd-inner.opened {
+    transform: translateZ(20px) rotateY(-12deg);
+}
+.cd.moving .cd-inner.facing {
+    transform: translateZ(34px) rotateY(0deg);
 }
 
 .cd-detail {

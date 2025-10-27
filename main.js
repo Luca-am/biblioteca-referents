@@ -118,10 +118,13 @@ class BibliotecaReferents {
             // target size and position (center-left, slightly up)
             // target position: center-left "hand" area (about 35% from left)
             const shelfRect = this.container.parentElement.getBoundingClientRect();
-            const shelfBasedWidth = Math.max(shelfRect.width * 0.5, 180);
-            const availableInViewport = Math.max(window.innerWidth - 140, 180);
-            const targetW = Math.min(400, shelfBasedWidth, availableInViewport);
-            const targetH = targetW; // square cover area
+            const spineWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--spine-width')) || 28;
+            const minCover = 180;
+            const maxCover = Math.max(minCover, window.innerWidth - 140 - spineWidth);
+            const shelfSuggestion = Math.max(minCover, shelfRect.width * 0.45);
+            const coverSize = Math.min(300, Math.min(maxCover, shelfSuggestion));
+            const targetW = coverSize + spineWidth;
+            const targetH = coverSize; // keep cover square
             const desiredLeft = shelfRect.left + Math.min(shelfRect.width * 0.08, 80);
             const maxLeft = window.innerWidth - targetW - 40;
             const minLeft = 40;
@@ -140,10 +143,8 @@ class BibliotecaReferents {
                 cd.classList.add('moving');
                 cd.classList.add('show-front');
 
-                // slightly delay the flip so the front becomes visible then rotates (gives a more natural effect)
-                setTimeout(() => {
-                    if (cdInner) cdInner.classList.add('flipped');
-                }, 45);
+                // apply a small left hinge immediately so it reads as being pulled out
+                if (cdInner) cdInner.classList.add('opened');
 
                 // animate position/size
                 cd.style.left = targetLeft + 'px';
@@ -151,6 +152,16 @@ class BibliotecaReferents {
                 cd.style.width = targetW + 'px';
                 cd.style.height = targetH + 'px';
                 cd.style.transform = 'none';
+
+                // after a fraction of the movement, rotate the inner face to face the viewer
+                // this creates the effect: pull out (hinge left) -> then straighten to face you
+                const faceDelay = Math.max(80, Math.round(dur * 0.45));
+                setTimeout(() => {
+                    if (cdInner) {
+                        cdInner.classList.remove('opened');
+                        cdInner.classList.add('facing');
+                    }
+                }, faceDelay);
             });
 
             // after animation ends, open detail
@@ -210,7 +221,10 @@ class BibliotecaReferents {
                 cd.style.transform = orig.transform || '';
                 cd.classList.remove('moving');
                 const cdInner = cd.querySelector('.cd-inner');
-                if (cdInner) cdInner.classList.remove('flipped');
+                if (cdInner) {
+                    cdInner.classList.remove('opened');
+                    cdInner.classList.remove('facing');
+                }
             });
 
             // after transition, restore original styles and remove active
@@ -230,12 +244,17 @@ class BibliotecaReferents {
                 cd.classList.remove('show-front');
                 if (this.activeCD === cd) this.activeCD = null;
             }, dur + 30);
-        } else {
+            } else {
             // fallback: just remove classes
             cd.classList.remove('picked');
             cd.classList.remove('moving');
             cd.classList.remove('active');
             cd.classList.remove('show-front');
+            const cdInner = cd.querySelector('.cd-inner');
+                if (cdInner) {
+                    cdInner.classList.remove('opened');
+                    cdInner.classList.remove('facing');
+                }
             cd.style.position = '';
             cd.style.left = '';
             cd.style.top = '';
