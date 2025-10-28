@@ -1,15 +1,15 @@
 :root {
-    --cd-width: 18px;
-    --cd-height: 140px;
-    --cd-thickness: 140px;
-    --shelf-color: #4a4a4a;
-    --shelf-border: #333333;
-    --cd-spine-color: #222;
-    --animation-duration: 0.45s;
-    --animation-timing: cubic-bezier(0.34, 1.56, 0.64, 1);
-    --cd-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
-    --shelf-depth: 30px;
-    --spine-width: 28px;
+    --page-bg: #f7f1e5;
+    --wood-light: #dcb57c;
+    --wood-mid: #c18b46;
+    --wood-dark: #8f5e20;
+    --shadow: rgba(42, 27, 12, 0.22);
+    --book-shadow: 0 18px 26px rgba(0, 0, 0, 0.18);
+    --book-radius: 12px;
+    --text-main: #2f1b0a;
+    --accent: #c66a1f;
+    --muted: #6f5434;
+    --detail-bg: #fff9ef;
 }
 
 * {
@@ -19,380 +19,295 @@
 }
 
 body {
-    background: #ffffff; /* simple white background as requested */
     min-height: 100vh;
-    margin: 0;
-    font-family: Arial, sans-serif;
-    display: grid;
-    grid-template-columns: 1fr minmax(280px, 340px);
-    gap: clamp(24px, 6vw, 72px);
-    align-items: flex-start;
-    padding: clamp(24px, 5vw, 72px);
+    background: var(--page-bg);
+    font-family: "Poppins", "Segoe UI", sans-serif;
+    color: var(--text-main);
+    padding: clamp(24px, 5vw, 60px);
 }
 
-.scene {
-    width: 100%;
-    min-height: 280px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: clamp(16px, 3vw, 28px);
-    perspective: 1000px;
-}
-
-.shelf {
-    position: relative;
-    flex: 1;
-    width: 100%;
-    transform-style: preserve-3d;
-    background: #f0f0f0; /* light shelf strip */
-    padding: 16px clamp(18px, 3vw, 32px);
-    border-radius: 10px;
-    box-shadow: 0 10px 28px rgba(0,0,0,0.08);
-    border: 2px solid rgba(0,0,0,0.08);
-    overflow: visible;
-}
-
-.shelf-background {
-    position: absolute;
-    inset: -18px -22px;
-    background: var(--shelf-color);
-    transform: translateZ(-20px);
-    box-shadow: 
-        0 6px 20px rgba(0,0,0,0.4),
-        inset 0 0 40px rgba(0,0,0,0.45);
-    border: 2px solid var(--shelf-border);
-    border-radius: 14px;
-}
-
-.cd-container {
-    display: flex;
-    gap: clamp(10px, 2vw, 18px);
-    padding: clamp(6px, 1.6vw, 12px);
-    transform-style: preserve-3d;
-    overflow: visible;
-    align-items: flex-end;
-    justify-content: flex-start;
-    width: 100%;
-}
-
-.cd {
-    width: var(--spine-width); /* visible spine width */
-    height: 160px;
-    position: relative;
-    transform-style: preserve-3d;
-    transform-origin: center center;
-    transition: transform var(--animation-duration) var(--animation-timing), box-shadow 120ms ease;
-    cursor: pointer;
-    will-change: transform;
-    flex: 0 0 auto;
-    perspective: 900px; /* give children a 3D perspective */
-    overflow: visible;
-}
-
-.cd-placeholder {
-    width: var(--spine-width);
-    height: 160px;
-    flex: 0 0 var(--spine-width);
-    visibility: hidden;
-    pointer-events: none;
-}
-
-.cd-inner {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    transform-style: preserve-3d;
-    transform-origin: left center;
-    transition: transform calc(var(--animation-duration) * 1.1) var(--animation-timing);
-}
-
-.cd:hover {
-    transform: translateY(-8px) scale(1.02);
-    z-index: 5;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.12);
-}
-
-.cd.active {
-    transform: translateY(-14px) scale(1.04);
-    z-index: 20;
-}
-
-/* When a CD is "picked" we make it fixed-ish so it feels like it's being grabbed
-   and move it closer to the screen center for a more realistic pickup animation. */
-.cd.moving {
-    /* keep only a subtle lift+scale here — the rotation is handled by the inner face
-       so we avoid double-rotations that made the cover shift unexpectedly */
-    transform: translateY(-20px) scale(1.06);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
-    z-index: 999;
-}
-
-/* active + moving remains modest */
-.cd.active.moving {
-    transform: translateY(-22px) scale(1.08);
-}
-
-.cd-spine {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    color: white;
-    writing-mode: vertical-rl;
-    padding: 6px 4px;
+.page-header {
     text-align: center;
-    overflow: hidden;
-    border-radius: 3px;
-    font-weight: 600;
-    backface-visibility: hidden;
-    transform: rotateY(0deg) translateZ(1px);
-    transition: opacity 0.35s ease;
+    margin-bottom: clamp(32px, 6vw, 64px);
 }
 
-/* hand-drawn / sketch like border for the spine */
-.cd-spine {
-    background: #ffffff;
-    border: 2px solid #000;
-    box-shadow: 4px 6px 12px rgba(0,0,0,0.08);
-    color: #111;
-}
-
-.cd-spine::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg,
-        transparent,
-        rgba(255,255,255,0.2),
-        transparent);
-}
-
-.cd-spine::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg,
-        transparent,
-        rgba(255,255,255,0.2),
-        transparent);
-}
-
-.cd-front { 
-    position: absolute;
-    top: 0;
-    left: var(--spine-width);
-    width: calc(100% - var(--spine-width));
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    backface-visibility: hidden;
-    transform-origin: left center;
-    transform: rotateY(0deg);
-    visibility: hidden;
-    opacity: 0;
-    transition: opacity 0.35s ease, transform 0.35s ease;
-    border-radius: 6px;
-    border: 3px solid #000;
-    background-color: #ffffff;
-    box-shadow: 12px 16px 28px rgba(0,0,0,0.18);
-    pointer-events: none;
-}
-
-/* Show the cover on the picked/focused CD (inline styles also set display) */
-
-
-/* initials fallback when image missing */
-.cover-initials {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 48px;
+.page-header h1 {
+    font-size: clamp(32px, 5vw, 48px);
     font-weight: 700;
-    color: rgba(255,255,255,0.95);
-    text-shadow: 0 2px 2px rgba(0,0,0,0.2);
+    letter-spacing: -0.02em;
 }
 
-/* when image missing, initials should contrast with the spine color */
-.cd-front .cover-initials { color: rgba(255,255,255,0.95); }
-
-.cd-front::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-        135deg,
-        rgba(255,255,255,0.2) 0%,
-        transparent 50%,
-        rgba(0,0,0,0.2) 100%
-    );
-    pointer-events: none;
+.page-header p {
+    margin-top: 12px;
+    font-size: 18px;
+    color: var(--muted);
 }
 
-/* single outward turn for the inner case */
-/* single outward turn for the inner case (hinge on the left, small angle)
-   Use a single transform only so we don't override earlier rules or create
-   conflicting declarations. Keep a slight translateZ to make the cover read
-   as a distinct plane while still attached to the spine. */
-.cd-inner.opened {
-    transform-origin: left center;
-    transform: translateZ(18px) rotateY(-12deg);
+.layout {
+    width: min(1180px, 100%);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    gap: clamp(32px, 6vw, 72px);
+    align-items: start;
 }
 
-/* final facing state: front faces the viewer straight-on
-   translateZ is slightly larger to bring it forward a bit more when facing */
-.cd-inner.facing {
-    transform-origin: left center;
-    transform: translateZ(28px) rotateY(0deg);
-}
-
-/* show the front face when the CD is in the moving/picked state */
-/* reveal the front without applying an extra rotation here.
-   The rotation is applied to the inner container (.cd-inner.opened)
-   so the cover behaves as part of the same object and doesn't
-   visually detach or shift unexpectedly. */
-.cd.moving .cd-front {
-    visibility: visible;
-    opacity: 1;
-    transform: none;
-}
-
-.cd.show-front .cd-front {
-    visibility: visible;
-    opacity: 1;
-    transform: rotateY(0deg) translateX(0);
-}
-
-.cd.show-front .cd-spine {
-    opacity: 1;
-}
-
-/* small translateZ 'pop' while picking to emphasize depth */
-.cd.moving .cd-inner {
-    transform: translateZ(10px);
-}
-.cd.moving .cd-inner.opened {
-    transform: translateZ(20px) rotateY(-12deg);
-}
-.cd.moving .cd-inner.facing {
-    transform: translateZ(34px) rotateY(0deg);
-}
-
-.cd-detail {
-    display: none;
-    flex: 0 0 min(340px, 32vw);
-    position: sticky;
-    top: clamp(32px, 8vh, 80px);
-    align-self: flex-start;
-}
-
-.cd-detail.active {
-    display: block;
-}
-
-.cd-content {
-    background: #222;
-    padding: 22px;
-    border-radius: 14px;
-    width: 100%;
+.bookshelf {
+    background: linear-gradient(180deg, #fffdf8 0%, #f9ecd9 100%);
+    border-radius: 28px;
+    padding: clamp(28px, 4vw, 48px) clamp(20px, 4vw, 56px);
+    box-shadow: 0 30px 60px rgba(47, 27, 10, 0.12);
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: clamp(36px, 7vw, 80px);
     position: relative;
-    box-shadow: 0 10px 26px rgba(0,0,0,0.18);
+    overflow: hidden;
 }
 
-.cd-cover {
+.bookshelf::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at top, rgba(255, 255, 255, 0.55) 0%, transparent 60%);
+}
+
+.shelf-row {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    min-height: clamp(210px, 30vw, 260px);
+}
+
+.books-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: clamp(12px, 3vw, 32px);
     width: 100%;
+    padding: 0 clamp(22px, 4vw, 60px) clamp(42px, 5vw, 68px);
+    flex-wrap: wrap;
+    z-index: 1;
 }
 
-.cd-cover img {
-    width: 100%;
-    max-height: 320px;
-    object-fit: cover;
-    border-radius: 8px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-    background-color: #f0f0f0; /* Color de fons per si la imatge no carrega */
+.shelf-plank {
+    position: absolute;
+    left: 5%;
+    right: 5%;
+    bottom: 0;
+    height: clamp(28px, 4vw, 40px);
+    border-radius: 18px;
+    background: linear-gradient(90deg, var(--wood-dark) 0%, var(--wood-mid) 45%, var(--wood-light) 50%, var(--wood-mid) 55%, var(--wood-dark) 100%);
+    box-shadow:
+        0 18px 30px rgba(30, 20, 12, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -6px 12px rgba(0, 0, 0, 0.18);
 }
 
-.cd-info {
-    color: white;
-}
-
-.cd-info h2 {
-    margin-bottom: 15px;
+.book {
+    --book-height: clamp(160px, 28vw, 220px);
+    --tilt: 0deg;
+    position: relative;
+    width: clamp(48px, 6vw, 72px);
+    height: var(--book-height);
+    border-radius: var(--book-radius) var(--book-radius) 6px 6px;
+    border: none;
+    appearance: none;
+    background: linear-gradient(160deg, #ef8e7d 0%, #e76b5f 45%, #b7473f 100%);
+    box-shadow: var(--book-shadow);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: clamp(10px, 1.6vw, 16px);
+    text-align: center;
     color: #fff;
-    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: clamp(10px, 1.6vw, 13px);
+    line-height: 1.1;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg) rotateZ(var(--tilt));
+    cursor: pointer;
+    transition: transform 220ms ease, box-shadow 220ms ease;
+    background-clip: padding-box;
 }
 
-.cd-info p {
-    margin-bottom: 10px;
-    line-height: 1.6;
+.book::before {
+    content: "";
+    position: absolute;
+    inset: 4px 6px auto;
+    height: 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.45);
+    transform: rotate(180deg) rotateZ(var(--tilt));
+    opacity: 0.6;
 }
 
-.cd-info em {
-    color: #ffd700;
-    font-size: 18px;
+.book::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: var(--book-radius) var(--book-radius) 6px 6px;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 55%);
+    pointer-events: none;
+}
+
+.book:hover {
+    transform: translateY(-8px) rotate(180deg) rotateZ(var(--tilt));
+    box-shadow: 0 24px 36px rgba(0, 0, 0, 0.22);
+}
+
+.book:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 4px;
+}
+
+.book--active {
+    transform: translateY(-6px) rotate(180deg) rotateZ(var(--tilt));
+    box-shadow: 0 26px 36px rgba(0, 0, 0, 0.26);
+}
+
+.book--decor {
+    cursor: default;
+    filter: saturate(0.85);
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+.book[data-tone="sunrise"] {
+    background: linear-gradient(150deg, #f9c56a 0%, #f2963a 40%, #d46828 100%);
+}
+
+.book[data-tone="forest"] {
+    background: linear-gradient(150deg, #8acb88 0%, #4fa66b 45%, #347954 100%);
+}
+
+.book[data-tone="berry"] {
+    background: linear-gradient(150deg, #cf87d8 0%, #a35dbe 50%, #6e3f8f 100%);
+}
+
+.book[data-tone="ocean"] {
+    background: linear-gradient(150deg, #66c1f2 0%, #418ed1 55%, #2b5fa4 100%);
+}
+
+.book[data-tone="rose"] {
+    background: linear-gradient(150deg, #f793b1 0%, #eb668f 50%, #c64f70 100%);
+}
+
+.book[data-tone="sand"] {
+    background: linear-gradient(150deg, #f9e08a 0%, #e9c563 45%, #c79f38 100%);
+    color: #3b250c;
+}
+
+.book[data-tone="sand"]::before {
+    background: rgba(0, 0, 0, 0.12);
+    opacity: 0.65;
+}
+
+.book-detail {
+    background: var(--detail-bg);
+    border-radius: 24px;
+    padding: clamp(24px, 4vw, 36px);
+    box-shadow: 0 24px 48px rgba(47, 27, 10, 0.18);
+    position: sticky;
+    top: clamp(24px, 8vw, 80px);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    opacity: 0;
+    transform: translateY(16px);
+    pointer-events: none;
+    transition: opacity 200ms ease, transform 240ms ease;
+    min-height: 280px;
+}
+
+.book-detail.open {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+}
+
+.detail-close {
+    align-self: flex-end;
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: color 150ms ease;
+}
+
+.detail-close:hover {
+    color: var(--accent);
+}
+
+.detail-cover {
+    width: 100%;
+    border-radius: 18px;
+    overflow: hidden;
+    background: linear-gradient(140deg, rgba(211, 190, 154, 0.6), rgba(255, 255, 255, 0.8));
+    min-height: 220px;
+    display: grid;
+    place-items: center;
+}
+
+.detail-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     display: block;
-    margin-bottom: 15px;
 }
 
-.cd-info a {
-    color: #4a9eff;
+.detail-cover img.is-placeholder {
+    display: none;
+}
+
+.detail-info h2 {
+    font-size: 24px;
+    margin-bottom: 12px;
+}
+
+.detail-info p {
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.detail-info em {
+    font-style: normal;
+    display: block;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.detail-info a {
+    color: var(--accent);
+    font-weight: 600;
     text-decoration: none;
-    transition: color 0.3s ease;
 }
 
-.cd-info a:hover {
-    color: #7cb8ff;
+.detail-info a:hover {
     text-decoration: underline;
 }
 
-.close-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-    padding: 5px;
-}
-
-.close-button:hover {
-    color: #999;
-}
-
-@media (max-width: 960px) {
-    body {
+@media (max-width: 980px) {
+    .layout {
         grid-template-columns: 1fr;
-        padding: clamp(20px, 6vw, 40px);
     }
 
-    .cd-detail {
-        position: static;
-        width: 100%;
-        flex: none;
+    .book-detail {
+        position: relative;
+        top: auto;
+    }
+}
+
+@media (max-width: 640px) {
+    body {
+        padding: clamp(16px, 4vw, 24px);
     }
 
-    .cd-content {
-        max-width: 100%;
+    .books-row {
+        justify-content: flex-start;
     }
 }

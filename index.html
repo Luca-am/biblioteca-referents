@@ -7,26 +7,23 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="scene">
-        <div class="shelf">
-            <div class="shelf-background"></div>
-            <div id="cd-container" class="cd-container">
-                <!-- Els CDs es generaran amb JavaScript -->
+    <header class="page-header">
+        <h1>Biblioteca de Referents</h1>
+        <p>Descobreix els nostres llibres i referents destacats.</p>
+    </header>
+    <main class="layout">
+        <section id="bookshelf" class="bookshelf" aria-label="Biblioteca amb prestatgeries"></section>
+        <aside id="book-detail" class="book-detail" aria-live="polite">
+            <button class="detail-close" type="button" aria-label="Tanca">&times;</button>
+            <div class="detail-cover">
+                <img id="book-cover" src="" alt="">
             </div>
-        </div>
-    </div>
-    <div id="cd-detail" class="cd-detail">
-        <button class="close-button">&times;</button>
-        <div class="cd-content">
-            <div class="cd-cover">
-                <img src="" alt="" id="cd-cover-image">
+            <div class="detail-info">
+                <h2 id="book-title"></h2>
+                <div id="book-extra"></div>
             </div>
-            <div class="cd-info">
-                <h2 id="cd-title"></h2>
-                <p id="cd-description"></p>
-            </div>
-        </div>
-    </div>
+        </aside>
+    </main>
     <script src="referents.js"></script>
     <script src="main.js"></script>
 </body>

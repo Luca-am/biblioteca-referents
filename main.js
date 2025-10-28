@@ -1,326 +1,195 @@
 class BibliotecaReferents {
     constructor() {
-        this.container = document.getElementById('cd-container');
-        this.detailPanel = document.getElementById('cd-detail');
-        this.cdTitle = document.getElementById('cd-title');
-        this.cdDescription = document.getElementById('cd-description');
-        this.cdCoverImage = document.getElementById('cd-cover-image');
-        this.activeCD = null; // track the currently expanded CD
-        // Palette of bright colors to use as fallbacks when images fail
-        this.palette = [
-            '#ff6b6b', '#f7b267', '#ffd166', '#06d6a0', '#4ecdc4',
-            '#4d96ff', '#845ef7', '#ff6fb5', '#8d99ae', '#f94144'
-        ];
-        this._colorIndex = 0;
-        this.setupCloseButton();
-        this.init();
+        this.bookshelf = document.getElementById('bookshelf');
+        this.detail = document.getElementById('book-detail');
+        this.detailClose = this.detail ? this.detail.querySelector('.detail-close') : null;
+        this.detailCover = document.getElementById('book-cover');
+        this.detailTitle = document.getElementById('book-title');
+        this.detailExtra = document.getElementById('book-extra');
+        this.activeBook = null;
+
+        this.colorTones = ['sunrise', 'forest', 'berry', 'ocean', 'rose', 'sand'];
+        this.heightPool = [210, 220, 190, 200, 180, 230];
+
+        this.buildShelves(3);
+        this.renderBooks();
+        this.registerGlobalEvents();
     }
 
-    init() {
-        this.renderCDs();
-        this.adjustShelfSize();
-        window.addEventListener('resize', () => this.adjustShelfSize());
-    }
+    buildShelves(totalShelves) {
+        this.shelfRows = [];
+        const shelves = Math.max(totalShelves, 1);
 
-    renderCDs() {
-        referents.forEach((referent, idx) => {
-            const cd = this.createCD(referent, idx);
-            this.container.appendChild(cd);
-        });
-    }
+        for (let i = 0; i < shelves; i += 1) {
+            const row = document.createElement('div');
+            row.className = 'shelf-row';
 
-    createCD(referent, idx) {
-        const cd = document.createElement('div');
-        cd.className = 'cd';
-        cd.innerHTML = `
-            <div class="cd-inner">
-                <div class="cd-spine">${referent.nom}</div>
-                <div class="cd-front" style="background-image: url('images/${referent.imatge}')"></div>
-            </div>
-        `;
-    // assign a color from the palette (cycle)
-    const color = this.palette[idx % this.palette.length] || this.palette[this._colorIndex++ % this.palette.length];
-    const front = cd.querySelector('.cd-front');
-    // default to the color as background; if the image loads we'll replace it
-    front.style.backgroundColor = color;
+            const booksRow = document.createElement('div');
+            booksRow.className = 'books-row';
+            booksRow.setAttribute('role', 'list');
 
-    // ensure spine text is readable by picking white or black depending on color luminance
-    const spine = cd.querySelector('.cd-spine');
-    spine.style.color = this.getContrastColor(color);
+            const plank = document.createElement('div');
+            plank.className = 'shelf-plank';
 
-    // give each spine a tiny random rotation to feel hand-placed
-    const jitter = (Math.random() * 6) - 3; // -3deg .. 3deg
-    cd.style.transform = `rotate(${jitter}deg)`;
+            row.appendChild(booksRow);
+            row.appendChild(plank);
+            this.bookshelf.appendChild(row);
 
-        // Preload image; if it loads, set as background-image. If it fails, keep solid color.
-        const imgUrl = `images/${referent.imatge}`;
-        const img = new Image();
-        img.onload = () => {
-            // use background-image for the front
-            front.style.backgroundImage = `url('${imgUrl}')`;
-            front.style.backgroundColor = 'transparent';
-            front.innerHTML = '';
-        };
-        img.onerror = () => {
-            // keep the solid color and show initials
-            front.style.backgroundImage = 'none';
-            const initials = this.getInitials(referent.nom);
-            front.innerHTML = `<div class="cover-initials">${initials}</div>`;
-        };
-        img.src = imgUrl;
-
-        // When clicking a CD, animate it to a 'picked' fixed position (like grabbing it from a shelf)
-        cd.addEventListener('click', (e) => {
-            // If another CD is active, drop it back first
-            if (this.activeCD && this.activeCD !== cd) {
-                this.dropBack(this.activeCD);
-            }
-
-            // If this CD is already picked and detail open, do nothing
-            if (this.activeCD === cd && this.detailPanel.classList.contains('active')) return;
-
-            // If already active (expanded) but detail closed, open detail
-            if (this.activeCD === cd && !this.detailPanel.classList.contains('active')) {
-                this.showDetail(referent);
-                return;
-            }
-
-            // Start pickup animation
-            this.activeCD = cd;
-            const cdInner = cd.querySelector('.cd-inner');
-            // remember original inline styles to restore later
-            const rect = cd.getBoundingClientRect();
-            cd._orig = {
-                position: cd.style.position || '',
-                left: cd.style.left || '',
-                top: cd.style.top || '',
-                width: cd.style.width || '',
-                height: cd.style.height || '',
-                zIndex: cd.style.zIndex || ''
-            };
-
-            // Insert a placeholder to keep shelf layout stable while this CD is removed from flow
-            if (!cd._placeholder) {
-                const ph = document.createElement('div');
-                ph.className = 'cd-placeholder';
-                cd._placeholder = ph;
-                cd.parentNode.insertBefore(ph, cd);
-            }
-            if (cd._placeholder) {
-                cd._placeholder.style.width = rect.width + 'px';
-                cd._placeholder.style.height = rect.height + 'px';
-                cd._placeholder.style.flex = '0 0 ' + rect.width + 'px';
-            }
-
-            // set fixed position at same place to enable animating to center
-            cd.style.position = 'fixed';
-            cd.style.left = rect.left + 'px';
-            cd.style.top = rect.top + 'px';
-            cd.style.width = rect.width + 'px';
-            cd.style.height = rect.height + 'px';
-            cd.style.margin = '0';
-            cd.style.zIndex = 999;
-
-            // store original rect and transform so we can animate back
-            cd._orig.rect = rect;
-            cd._orig.transform = cd.style.transform || '';
-
-            // force paint
-            void cd.offsetWidth;
-
-            // target size and position (center-left, slightly up)
-            // target position: center-left "hand" area (about 35% from left)
-            const shelfRect = this.container.parentElement.getBoundingClientRect();
-            const spineWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--spine-width')) || 28;
-            const minCover = 180;
-            const maxCover = Math.max(minCover, window.innerWidth - 140 - spineWidth);
-            const shelfSuggestion = Math.max(minCover, shelfRect.width * 0.45);
-            const coverSize = Math.min(300, Math.min(maxCover, shelfSuggestion));
-            const targetW = coverSize + spineWidth;
-            const targetH = coverSize; // keep cover square
-            const desiredLeft = shelfRect.left + Math.min(shelfRect.width * 0.08, 80);
-            const maxLeft = window.innerWidth - targetW - 40;
-            const minLeft = 40;
-            const targetLeft = Math.min(Math.max(desiredLeft, minLeft), maxLeft);
-            const desiredTop = shelfRect.top + shelfRect.height * 0.1;
-            const targetTop = Math.min(Math.max(desiredTop, 30), window.innerHeight - targetH - 40);
-
-            // animate via transition of left/top/width/height and transform
-            const durStr = getComputedStyle(document.documentElement).getPropertyValue('--animation-duration') || '0.45s';
-            const dur = parseFloat(durStr.replace('s','')) * 1000 + 50;
-            cd.style.transition = `left ${dur}ms ease, top ${dur}ms ease, width ${dur}ms ease, height ${dur}ms ease, transform ${dur}ms ease`;
-
-            // start animation to center; mark as moving during animation
-            requestAnimationFrame(() => {
-                // reveal the front face immediately (visibility handled in CSS)
-                cd.classList.add('moving');
-                cd.classList.add('show-front');
-
-                // apply a small left hinge immediately so it reads as being pulled out
-                if (cdInner) {
-                    cdInner.classList.remove('facing');
-                    cdInner.classList.add('opened');
-                }
-
-                // animate position/size
-                cd.style.left = targetLeft + 'px';
-                cd.style.top = targetTop + 'px';
-                cd.style.width = targetW + 'px';
-                cd.style.height = targetH + 'px';
-                cd.style.transform = 'none';
-
-                // after a fraction of the movement, rotate the inner face to face the viewer
-                // this creates the effect: pull out (hinge left) -> then straighten to face you
-                const faceDelay = Math.max(80, Math.round(dur * 0.45));
-                setTimeout(() => {
-                    if (cdInner) {
-                        cdInner.classList.remove('opened');
-                        cdInner.classList.add('facing');
-                    }
-                }, faceDelay);
-            });
-
-            // after animation ends, open detail
-            setTimeout(() => this.showDetail(referent), dur + 30);
-        });
-
-        return cd;
-    }
-
-    showDetail(referent) {
-        this.cdTitle.textContent = referent.nom;
-        // Keep description minimal (user wanted name+image primary), but preserve available fields when present
-        let html = '';
-        if (referent.frase) html += `<p><em>"${referent.frase}"</em></p>`;
-        if (referent.resum) html += `<p>${referent.resum}</p>`;
-        if (referent.categoria) html += `<p>Categoria: ${referent.categoria}</p>`;
-        if (referent.link) html += `<p><a href="${referent.link}" target="_blank">Més informació</a></p>`;
-        this.cdDescription.innerHTML = html;
-        this.cdCoverImage.src = `images/${referent.imatge}`;
-        this.cdCoverImage.alt = referent.nom;
-        this.detailPanel.classList.add('active');
-    }
-
-    setupCloseButton() {
-        const closeButton = this.detailPanel.querySelector('.close-button');
-        closeButton.addEventListener('click', () => {
-            this.detailPanel.classList.remove('active');
-            // animate active CD back into shelf if any
-            if (this.activeCD) this.dropBack(this.activeCD);
-        });
-    }
-
-    collapseCD(cd) {
-        if (!cd) return;
-        cd.classList.remove('moving');
-        // wait for picked->active transform animation then remove active
-        setTimeout(() => cd.classList.remove('active'), 200);
-        if (this.activeCD === cd) this.activeCD = null;
-    }
-
-    dropBack(cd) {
-        if (!cd) return;
-        const orig = cd._orig || {};
-        const origRect = orig.rect;
-        const durStr = getComputedStyle(document.documentElement).getPropertyValue('--animation-duration') || '0.45s';
-        const dur = parseFloat(durStr.replace('s','')) * 1000 + 50;
-
-        // if we have the original rect, animate back to it
-        if (origRect) {
-            cd.style.transition = `left ${dur}ms ease, top ${dur}ms ease, width ${dur}ms ease, height ${dur}ms ease, transform ${dur}ms ease`;
-            // animate to original position/size
-            requestAnimationFrame(() => {
-                cd.style.left = origRect.left + 'px';
-                cd.style.top = origRect.top + 'px';
-                cd.style.width = origRect.width + 'px';
-                cd.style.height = origRect.height + 'px';
-                cd.style.transform = orig.transform || '';
-                cd.classList.remove('moving');
-                const cdInner = cd.querySelector('.cd-inner');
-                if (cdInner) {
-                    cdInner.classList.remove('opened');
-                    cdInner.classList.remove('facing');
-                }
-            });
-
-            // after transition, restore original styles and remove active
-            setTimeout(() => {
-                // restore original inline styles
-                cd.style.position = orig.position || '';
-                cd.style.left = orig.left || '';
-                cd.style.top = orig.top || '';
-                cd.style.width = orig.width || '';
-                cd.style.height = orig.height || '';
-                cd.style.margin = '';
-                cd.style.zIndex = orig.zIndex || '';
-                cd.style.transition = '';
-                // restore original transform (rotation)
-                cd.style.transform = orig.transform || '';
-                cd.classList.remove('active');
-                cd.classList.remove('show-front');
-                if (cd._placeholder && cd._placeholder.parentNode) {
-                    cd._placeholder.parentNode.removeChild(cd._placeholder);
-                    cd._placeholder = null;
-                }
-                if (this.activeCD === cd) this.activeCD = null;
-            }, dur + 30);
-            } else {
-            // fallback: just remove classes
-            cd.classList.remove('picked');
-            cd.classList.remove('moving');
-            cd.classList.remove('active');
-            cd.classList.remove('show-front');
-            const cdInner = cd.querySelector('.cd-inner');
-                if (cdInner) {
-                    cdInner.classList.remove('opened');
-                    cdInner.classList.remove('facing');
-                }
-                // remove any placeholder if present
-                if (cd._placeholder && cd._placeholder.parentNode) {
-                    cd._placeholder.parentNode.removeChild(cd._placeholder);
-                    cd._placeholder = null;
-                }
-            cd.style.position = '';
-            cd.style.left = '';
-            cd.style.top = '';
-            cd.style.width = '';
-            cd.style.height = '';
-            cd.style.zIndex = '';
-            if (this.activeCD === cd) this.activeCD = null;
+            this.shelfRows.push(booksRow);
         }
     }
 
-    getInitials(name) {
-        if (!name) return '';
-        const parts = name.trim().split(/\s+/);
-        if (parts.length === 1) return parts[0].substring(0,2).toUpperCase();
-        return (parts[0][0] + parts[1][0]).toUpperCase();
+    renderBooks() {
+        if (!Array.isArray(referents) || referents.length === 0) {
+            this.populateDecorativeBooks();
+            return;
+        }
+
+        const perShelf = Math.max(Math.ceil(referents.length / this.shelfRows.length), 1);
+
+        referents.forEach((referent, index) => {
+            const shelfIndex = Math.min(this.shelfRows.length - 1, Math.floor(index / perShelf));
+            const shelf = this.shelfRows[shelfIndex];
+            if (!shelf) return;
+            const book = this.createBook(referent, index);
+            shelf.appendChild(book);
+        });
+
+        this.populateDecorativeBooks(perShelf);
     }
 
-    // Simple luminance-based contrast helper: return '#fff' or '#000'
-    getContrastColor(hex) {
-        // remove # if present
-        const h = hex.replace('#','');
-        const r = parseInt(h.substring(0,2),16);
-        const g = parseInt(h.substring(2,4),16);
-        const b = parseInt(h.substring(4,6),16);
-        // Perceived luminance
-        const lum = 0.2126*r + 0.7152*g + 0.0722*b;
-        return lum > 140 ? '#000' : '#fff';
+    createBook(referent, index) {
+        const book = document.createElement('button');
+        book.type = 'button';
+        book.className = 'book';
+        book.dataset.index = index.toString();
+        book.dataset.tone = this.colorTones[index % this.colorTones.length];
+        book.setAttribute('role', 'listitem');
+        book.setAttribute('aria-label', referent.nom);
+        book.textContent = referent.nom;
+
+        const height = this.heightPool[index % this.heightPool.length];
+        const tilt = (Math.random() * 8 - 4).toFixed(2);
+        book.style.setProperty('--book-height', `${height}px`);
+        book.style.setProperty('--tilt', `${tilt}deg`);
+
+        book.addEventListener('click', () => this.handleBookSelection(referent, book));
+
+        return book;
     }
 
-    adjustShelfSize() {
-        const totalCDs = referents.length;
-        // approximate spine width + gap to decide spacing strategy
-        const cdWidth = 28 + 12; // spine plus average gap
-        const containerWidth = this.container.parentElement.clientWidth || window.innerWidth;
-        const requiredWidth = totalCDs * cdWidth;
-        this.container.style.minWidth = '100%';
-        this.container.style.justifyContent = requiredWidth < containerWidth ? 'space-evenly' : 'flex-start';
+    createDecorBook() {
+        const decor = document.createElement('div');
+        decor.className = 'book book--decor';
+        decor.setAttribute('aria-hidden', 'true');
+        const tone = this.colorTones[Math.floor(Math.random() * this.colorTones.length)];
+        const height = this.heightPool[Math.floor(Math.random() * this.heightPool.length)];
+        const tilt = (Math.random() * 6 - 3).toFixed(2);
+
+        decor.dataset.tone = tone;
+        decor.style.setProperty('--book-height', `${height}px`);
+        decor.style.setProperty('--tilt', `${tilt}deg`);
+
+        return decor;
+    }
+
+    populateDecorativeBooks(targetPerShelf = 4) {
+        const minimum = Math.max(targetPerShelf, 5);
+        this.shelfRows.forEach((row) => {
+            const currentBooks = row.querySelectorAll('.book');
+            const needed = Math.max(minimum - currentBooks.length, 0);
+            for (let i = 0; i < needed; i += 1) {
+                row.appendChild(this.createDecorBook());
+            }
+        });
+    }
+
+    handleBookSelection(referent, bookElement) {
+        if (this.activeBook === bookElement && this.detail.classList.contains('open')) {
+            this.closeDetail();
+            return;
+        }
+
+        if (this.activeBook) {
+            this.activeBook.classList.remove('book--active');
+        }
+
+        this.activeBook = bookElement;
+        this.activeBook.classList.add('book--active');
+
+        this.renderDetail(referent);
+        this.detail.classList.add('open');
+    }
+
+    renderDetail(referent) {
+        this.detailTitle.textContent = referent.nom || '';
+        this.renderExtraInfo(referent);
+        this.updateCoverImage(referent);
+    }
+
+    renderExtraInfo(referent) {
+        const fragments = [];
+
+        if (referent.frase) {
+            fragments.push(`<p><em>"${referent.frase}"</em></p>`);
+        }
+
+        if (referent.resum) {
+            fragments.push(`<p>${referent.resum}</p>`);
+        }
+
+        if (referent.categoria) {
+            fragments.push(`<p><strong>Categoria:</strong> ${referent.categoria}</p>`);
+        }
+
+        if (referent.link) {
+            fragments.push(`<p><a href="${referent.link}" target="_blank" rel="noopener noreferrer">Mes informacio</a></p>`);
+        }
+
+        this.detailExtra.innerHTML = fragments.join('') || '<p>Selecciona un llibre de la prestatgeria per veure els detalls.</p>';
+    }
+
+    updateCoverImage(referent) {
+        const src = referent.imatge ? `images/${referent.imatge}` : '';
+
+        if (!src) {
+            this.detailCover.removeAttribute('src');
+            this.detailCover.alt = '';
+            this.detailCover.classList.add('is-placeholder');
+            return;
+        }
+
+        this.detailCover.classList.remove('is-placeholder');
+        this.detailCover.src = src;
+        this.detailCover.alt = referent.nom || '';
+        this.detailCover.onerror = () => {
+            this.detailCover.classList.add('is-placeholder');
+            this.detailCover.removeAttribute('src');
+        };
+    }
+
+    registerGlobalEvents() {
+        if (this.detailClose) {
+            this.detailClose.addEventListener('click', () => this.closeDetail());
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                this.closeDetail();
+            }
+        });
+    }
+
+    closeDetail() {
+        if (this.activeBook) {
+            this.activeBook.classList.remove('book--active');
+            this.activeBook = null;
+        }
+        this.detail.classList.remove('open');
     }
 }
 
-// Inicialitzar quan es carregui la pàgina
-window.addEventListener('load', () => {
+window.addEventListener('DOMContentLoaded', () => {
     new BibliotecaReferents();
 });
+
