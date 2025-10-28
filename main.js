@@ -11,12 +11,12 @@ class BibliotecaReferents {
 
         this.toneNames = ['sunrise', 'forest', 'berry', 'ocean', 'rose', 'sand'];
         this.toneFallbacks = {
-            sunrise: '#f3a252',
-            forest: '#4fa66b',
-            berry: '#a35dbe',
-            ocean: '#418ed1',
-            rose: '#eb668f',
-            sand: '#d8ba62'
+            sunrise: '#f0eeea',
+            forest: '#ebe6dd',
+            berry: '#f3f0e8',
+            ocean: '#e1ded6',
+            rose: '#f5f2eb',
+            sand: '#e9e4dc'
         };
         this.heightPool = [210, 220, 200, 195, 185, 230];
 
@@ -114,7 +114,7 @@ class BibliotecaReferents {
         inner.appendChild(cover);
         book.appendChild(inner);
 
-        const fallbackColor = this.toneFallbacks[tone] || '#cfa46b';
+        const fallbackColor = this.toneFallbacks[tone] || '#e9e4dc';
         cover.style.backgroundColor = fallbackColor;
 
         if (referent.imatge) {
@@ -256,7 +256,7 @@ class BibliotecaReferents {
 
         if (this.detailCoverWrapper) {
             if (fallback) {
-                this.detailCoverWrapper.style.background = `linear-gradient(140deg, ${fallback} 0%, #ffffff 85%)`;
+                this.detailCoverWrapper.style.background = `repeating-linear-gradient(45deg, ${fallback} 0, ${fallback} 14px, #f9f6ef 14px, #f9f6ef 20px)`;
             } else {
                 this.detailCoverWrapper.style.background = '';
             }
